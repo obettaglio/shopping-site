@@ -7,7 +7,7 @@ Authors: Joel Burton, Christian Fernandez, Meggie Mahnken, Katie Byers.
 """
 
 
-from flask import Flask, render_template, redirect, flash
+from flask import Flask, render_template, redirect, flash, request, session
 import jinja2
 
 import melons
@@ -26,6 +26,13 @@ app.secret_key = 'this-should-be-something-unguessable'
 
 app.jinja_env.undefined = jinja2.StrictUndefined
 
+# melon_prices = {}
+
+# melon_list = melons.get_all()
+# for melon in melon_list:
+#     melon_prices[melon.melon_id] = melon.price
+
+
 
 @app.route("/")
 def index():
@@ -39,8 +46,16 @@ def list_melons():
     """Return page showing all the melons ubermelon has to offer"""
 
     melon_list = melons.get_all()
+    # melon_id = melon_list.melon_id
+    # melon_price = melons.melon_price
+    # melon_image_url = melons.melon_image_url
+    # melon_name = melons.melon.common_name
     return render_template("all_melons.html",
                            melon_list=melon_list)
+                            # melon_id=melon_id,
+                            # melon_price=melon_price,
+                            # melon_image_url=melon_image_url,
+                            # melon_name=melon_name)
 
 
 @app.route("/melon/<melon_id>")
@@ -50,7 +65,7 @@ def show_melon(melon_id):
     Show all info about a melon. Also, provide a button to buy that melon.
     """
 
-    melon = melons.get_by_id("meli")
+    melon = melons.get_by_id(melon_id)
     print melon
     return render_template("melon_details.html",
                            display_melon=melon)
@@ -71,14 +86,28 @@ def show_shopping_cart():
     #    - get the corresponding Melon object
     #    - compute the total cost for that type of melon
     #    - add this to the order total
-    #    - add quantity and total cost as attributes on the Melon object
+    #    - add quantity and total cost as attributes on the Meotal cost as lon object
     #    - add the Melon object to the list created above
     # - pass the total order cost and the list of Melon objects to the template
     #
     # Make sure your function can also handle the case wherein no cart has
     # been added to the session
 
-    return render_template("cart.html")
+    cart = session.get("cart")
+    melon_orders = []
+    if cart:
+        total = 0
+        keys = cart.keys()
+        for melon_id in keys:
+            new_melon = melons.get_by_id(melon_id)
+            # new_melon.melon_id = melon_id
+            new_melon.melon_qty = cart[melon_id]
+            # new_melon.price = melon_prices[melon_id]
+            new_melon.total = new_melon.melon_qty * new_melon.price 
+            melon_orders.append(new_melon)
+            total += new_melon.total
+    return render_template("cart.html", melon_orders=melon_orders, total_price=total)
+
 
 
 @app.route("/add_to_cart/<melon_id>")
@@ -99,8 +128,21 @@ def add_to_cart(melon_id):
     # - increment the count for that melon id by 1
     # - flash a success message
     # - redirect the user to the cart page
+    cart_exist = session.get("cart")
 
-    return "Oops! This needs to be implemented!"
+    if cart_exist:
+        if cart_exist.get(melon_id):
+            cart_exist[melon_id] += 1
+        else:
+            cart_exist[melon_id] = 1
+    else:
+
+        session["cart"] = {}
+        cart_exist[melon_id] = 1
+
+    flash("Added: " + str(melons.get_by_id(melon_id)))  # % (melons.get_by_id(melon_id))
+
+    return redirect("/cart")
 
 
 @app.route("/login", methods=["GET"])
