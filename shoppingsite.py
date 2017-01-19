@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 # A secret key is needed to use Flask sessioning features
 
-app.secret_key = 'this-should-be-something-unguessable'
+app.secret_key = 'ohigoawiehrwsagdfklsjgawe;irj;gsi'
 
 # Normally, if you refer to an undefined variable in a Jinja template,
 # Jinja silently ignores this. This makes debugging difficult, so we'll
@@ -31,7 +31,6 @@ app.jinja_env.undefined = jinja2.StrictUndefined
 # melon_list = melons.get_all()
 # for melon in melon_list:
 #     melon_prices[melon.melon_id] = melon.price
-
 
 
 @app.route("/")
@@ -95,19 +94,20 @@ def show_shopping_cart():
 
     cart = session.get("cart")
     melon_orders = []
+    total = 0
     if cart:
         total = 0
-        keys = cart.keys()
-        for melon_id in keys:
+        # keys = cart.keys()
+        for melon_id in cart:
             new_melon = melons.get_by_id(melon_id)
             # new_melon.melon_id = melon_id
             new_melon.melon_qty = cart[melon_id]
             # new_melon.price = melon_prices[melon_id]
-            new_melon.total = new_melon.melon_qty * new_melon.price 
+            new_melon.total = "%.2f" % (new_melon.melon_qty * new_melon.price)
+            # new_melon.price = new_melon.price_str()
             melon_orders.append(new_melon)
-            total += new_melon.total
-    return render_template("cart.html", melon_orders=melon_orders, total_price=total)
-
+            total += float(new_melon.total)
+    return render_template("cart.html", melon_orders=melon_orders, total_price="%.2f" % total)
 
 
 @app.route("/add_to_cart/<melon_id>")
@@ -128,6 +128,7 @@ def add_to_cart(melon_id):
     # - increment the count for that melon id by 1
     # - flash a success message
     # - redirect the user to the cart page
+
     cart_exist = session.get("cart")
 
     if cart_exist:
@@ -138,9 +139,10 @@ def add_to_cart(melon_id):
     else:
 
         session["cart"] = {}
+        cart_exist = session["cart"]
         cart_exist[melon_id] = 1
 
-    flash("Added: " + str(melons.get_by_id(melon_id)))  # % (melons.get_by_id(melon_id))
+    flash("Added: " + melons.get_by_id(melon_id).common_name)  # % (melons.get_by_id(melon_id))
 
     return redirect("/cart")
 
