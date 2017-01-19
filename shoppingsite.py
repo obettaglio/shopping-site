@@ -129,18 +129,26 @@ def add_to_cart(melon_id):
     # - flash a success message
     # - redirect the user to the cart page
 
-    cart_exist = session.get("cart")
+    # cart_exist = session.get("cart")
 
-    if cart_exist:
-        if cart_exist.get(melon_id):
-            cart_exist[melon_id] += 1
-        else:
-            cart_exist[melon_id] = 1
+    if session.get("cart", {}) != {}:
+        cart_dic = session.get("cart")
+        cart_dic[melon_id] = cart_dic.setdefault(melon_id, 0) + 1
+
     else:
+        cart_dic = {}
+        cart_dic[melon_id] = 1
 
-        session["cart"] = {}
-        cart_exist = session["cart"]
-        cart_exist[melon_id] = 1
+    # if cart_exist:
+    #     if cart_exist.get(melon_id):
+    #         cart_exist[melon_id] += 1
+    #     else:
+    #         cart_exist[melon_id] = 1
+    # else:
+
+    #     session["cart"] = {}
+    #     cart_exist = session["cart"]
+    #     cart_exist[melon_id] = 1
 
     flash("Added: " + melons.get_by_id(melon_id).common_name)  # % (melons.get_by_id(melon_id))
 
